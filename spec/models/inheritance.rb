@@ -20,6 +20,11 @@ class Firefox < Browser
   def render; end
 end
 
+class MobileFirefox < Firefox
+  field :small
+  def render; end
+end
+
 class Shape
   include Mongoid::Document
   field :x, :type => Integer, :default => 0

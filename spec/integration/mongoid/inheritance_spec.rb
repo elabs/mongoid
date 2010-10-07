@@ -26,35 +26,73 @@ describe Mongoid::Document do
 
   end
 
+
   context "when document is a subclass of a subclass" do
+    context "when using default collection" do
+      before do
+        Firefox.delete_all
+        @firefox = Firefox.create(:version => 2, :name => "Testy")
+      end
 
-    before do
-      Firefox.delete_all
-      @firefox = Firefox.create(:version => 2, :name => "Testy")
+      it "saves in the same collection as the root" do
+        collection = Mongoid.master.collection("canvases")
+        attributes = collection.find({ :name => "Testy"}, {}).next_document
+        attributes["version"].should == 2
+        attributes["name"].should == "Testy"
+        attributes["_type"].should == "Firefox"
+        attributes["_id"].should == @firefox.id
+      end
+
+      it "returns the document when querying for superclass" do
+        Browser.where(:name => "Testy").first.should == @firefox
+      end
+
+      it "returns the document when querying for root class" do
+        Canvas.where(:name => "Testy").first.should == @firefox
+      end
+
+      it 'should returns on of this subclasses if you find by _type' do
+        Browser.create(:name => 'Safari', :version => '4.0.0')
+        Canvas.where(:_type.in => ['Firefox']).count.should == 1
+      end
+
     end
 
-    it "saves in the same collection as the root" do
-      collection = Mongoid.master.collection("canvases")
-      attributes = collection.find({ :name => "Testy"}, {}).next_document
-      attributes["version"].should == 2
-      attributes["name"].should == "Testy"
-      attributes["_type"].should == "Firefox"
-      attributes["_id"].should == @firefox.id
-    end
+    context "when using custom collection name" do
+      before do
+        Firefox.delete_all
+        @default_collection_name = Firefox.collection_name
+        Firefox.store_in("foxy_foxes")
+        @firefox = Firefox.create(:version => 2, :name => "Testy")
+      end
 
-    it "returns the document when querying for superclass" do
-      Browser.where(:name => "Testy").first.should == @firefox
-    end
+      after do
+        Firefox.store_in(@default_collection_name)
+      end
 
-    it "returns the document when querying for root class" do
-      Canvas.where(:name => "Testy").first.should == @firefox
-    end
+      it "saves in the same collection as the root" do
+        collection = Mongoid.master.collection("foxy_foxes")
+        attributes = collection.find({ :name => "Testy"}, {}).next_document
+        attributes["version"].should == 2
+        attributes["name"].should == "Testy"
+        attributes["_type"].should == "Firefox"
+        attributes["_id"].should == @firefox.id
+      end
 
-    it 'should returns on of this subclasses if you find by _type' do
-      Browser.create(:name => 'Safari', :version => '4.0.0')
-      Canvas.where(:_type.in => ['Firefox']).count.should == 1
-    end
+      it "will not return the document when querying for superclass" do
+        Browser.where(:name => "Testy").first.should be_nil
+      end
 
+      it "will not return the document when querying for root class" do
+        Canvas.where(:name => "Testy").first.should be_nil
+      end
+
+      it 'should not return on of this subclasses if you find by _type' do
+        Browser.create(:name => 'Safari', :version => '4.0.0')
+        Canvas.where(:_type.in => ['Firefox']).count.should == 0
+      end
+
+    end
   end
 
   context "when document has associations" do
@@ -137,7 +175,7 @@ describe Mongoid::Document do
       Browser.count.should == 2
       Canvas.count.should == 3
     end
-    
+
     it "deletes all documents except for those belonging to parent class collection" do
       Firefox.delete_all
       Firefox.count.should == 0

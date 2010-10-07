@@ -40,9 +40,17 @@ describe Mongoid::Collections do
         Canvas.collection_name = "canvases"
       end
 
-      it "sets the collection name for the entire hierarchy" do
+      it "sets the collection name for the subclass and its subclasses" do
         Firefox.collection_name = "browsers"
-        Canvas.collection_name.should == "browsers"
+        Canvas.collection_name.should == "canvases"
+        MobileFirefox.collection_name.should == "browsers"
+
+        MobileFirefox.collection_name = "mobile"
+
+        Firefox.collection_name.should == "browsers"
+        Canvas.collection_name.should == "canvases"
+        MobileFirefox.collection_name.should == "mobile"
+
       end
     end
   end
@@ -88,10 +96,11 @@ describe Mongoid::Collections do
         Firefox.store_in :canvases
       end
 
-      it "changes the collection name for the entire hierarchy" do
+      it "changes the collection name for the subclass and its subclasses" do
         Mongoid::Collection.expects(:new).with(Firefox, "browsers").returns(@collection)
         Firefox.store_in :browsers
-        Canvas.collection_name.should == "browsers"
+        Canvas.collection_name.should == "canvases"
+        Firefox.collection_name.should == "browsers"
       end
     end
   end

@@ -5,7 +5,7 @@ module Mongoid #:nodoc
   module Collections
     extend ActiveSupport::Concern
     included do
-      cattr_accessor :_collection, :collection_name
+      class_attribute :_collection, :collection_name
       self.collection_name = self.name.collectionize
 
       delegate :collection, :db, :to => "self.class"

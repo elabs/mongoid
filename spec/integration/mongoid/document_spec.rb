@@ -49,8 +49,8 @@ describe Mongoid::Document do
 
     context "on a subclass of a root document" do
 
-      it "returns the root document collection" do
-        Browser.collection.should == Canvas.collection
+      it "returns the subclass document collection" do
+        Browser.collection.should_not == Canvas.collection
       end
     end
 

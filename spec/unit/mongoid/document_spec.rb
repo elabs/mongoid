@@ -536,7 +536,8 @@ describe Mongoid::Document do
 
     it "returns all subclasses for the class plus the class" do
       types = Canvas._types
-      types.size.should == 3
+      types.size.should == 4
+      types.should include("MobileFirefox")
       types.should include("Firefox")
       types.should include("Browser")
       types.should include("Canvas")
@@ -544,7 +545,8 @@ describe Mongoid::Document do
 
     it "does not return parent classes" do
       types = Browser._types
-      types.size.should == 2
+      types.size.should == 3
+      types.should include("MobileFirefox")
       types.should include("Firefox")
       types.should include("Browser")
     end
