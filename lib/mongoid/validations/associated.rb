@@ -23,6 +23,7 @@ module Mongoid #:nodoc:
       #
       # <tt>validator.validate_each(document, :name, name)</tt>
       def validate_each(document, attribute, value)
+        value = value.to_a if value.kind_of?(Mongoid::Criteria)
         values = value.is_a?(Array) ? value : [ value ]
         return if values.collect { |doc| doc.nil? || doc.valid? }.all?
         document.errors.add(attribute, :invalid, options.merge(:value => value))
